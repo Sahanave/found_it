@@ -1,0 +1,50 @@
+name: "building-genai-apps"
+services:
+  langflow:
+    image: langflowai/langflow:1.0.19
+    container_name: app_langflow
+    hostname: langflow
+    ports:
+      - "7860:7860"
+    depends_on:
+      - postgres
+    env_file: ".env"
+    volumes:
+      - langflow-data:/app/langflow
+      - langflow-config:/app/config
+    networks:
+      - node-network
+
+  postgres:
+    image: postgres:16
+    container_name: app_postgres
+    hostname: postgres
+    env_file: ".env"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - node-network
+
+  streamlit:
+    image: streamlit-app
+    env_file: 
+      - .env
+      - streamlit.env
+    container_name: app_streamlit
+    ports:
+      - "8501:8501"
+    depends_on:
+      - langflow
+      - postgres
+    networks:
+      - node-network
+
+volumes:
+  postgres-data:
+  langflow-data:
+  langflow-config:
+
+
+networks:
+  node-network:
+    driver: bridge

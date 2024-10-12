@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "Building GenAI Apps by Konrad Bujak"
+version = "0.1.0"
+description = ""
+authors = ["konradbjk"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    { include = "streamlit_app" },
+]
+
+[tool.poetry.dependencies]
+python = "~3.12"
+streamlit = "^1.39.0"
+elevenlabs = "^1.9.0"
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
