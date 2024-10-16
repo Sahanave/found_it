@@ -4,6 +4,9 @@ from typing import IO
 import requests as rq
 import streamlit as st
 from elevenlabs.client import ElevenLabs
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Initialize langflow API
 langflow_api_url = os.getenv("LANGFLOW_API_URL")
@@ -14,7 +17,7 @@ api_key = os.getenv("LANGFLOW_API_KEY")
 client = ElevenLabs(
     api_key=os.getenv("ELEVENLABS_API_KEY")
 )
-voice = os.getenv("ELEVEN_LABS_VOICE_ID")
+voice = os.getenv("ELEVENLABS_VOICE_ID")
 
 
 def run_flow(text: str) -> str:
@@ -25,6 +28,7 @@ def run_flow(text: str) -> str:
     :return: The JSON response from the flow
     """
     api_url = f"{langflow_api_url}/api/v1/run/{langflow_flow_id}"
+    print(api_url)
 
     payload = {"input_value": text,
                "output_type": "chat",
@@ -123,7 +127,6 @@ def text_to_speech(text: str) -> IO[bytes]:
 
 st.set_page_config(page_title="Building GenAI apps")
 st.title("Building GenAI apps")
-
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
