@@ -1,0 +1,338 @@
+{
+    "data": {
+        "edges": [],
+        "nodes": [
+            {
+                "data": {
+                    "type": "AmazonBedrockModel",
+                    "node": {
+                        "template": {
+                            "_type": "Component",
+                            "output_parser": {
+                                "trace_as_metadata": true,
+                                "list": false,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "output_parser",
+                                "value": "",
+                                "display_name": "Output Parser",
+                                "advanced": true,
+                                "input_types": [
+                                    "OutputParser"
+                                ],
+                                "dynamic": false,
+                                "info": "The parser to use to parse the output of the model",
+                                "title_case": false,
+                                "type": "other",
+                                "_input_type": "HandleInput"
+                            },
+                            "aws_access_key": {
+                                "load_from_db": true,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "aws_access_key",
+                                "value": "AWS_ACCESS_KEY",
+                                "display_name": "Access Key",
+                                "advanced": false,
+                                "input_types": [
+                                    "Message"
+                                ],
+                                "dynamic": false,
+                                "info": "",
+                                "title_case": false,
+                                "password": true,
+                                "type": "str",
+                                "_input_type": "SecretStrInput"
+                            },
+                            "aws_secret_key": {
+                                "load_from_db": true,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "aws_secret_key",
+                                "value": "AWS_ACCESS_SECRET",
+                                "display_name": "Secret Key",
+                                "advanced": false,
+                                "input_types": [
+                                    "Message"
+                                ],
+                                "dynamic": false,
+                                "info": "",
+                                "title_case": false,
+                                "password": true,
+                                "type": "str",
+                                "_input_type": "SecretStrInput"
+                            },
+                            "code": {
+                                "type": "code",
+                                "required": true,
+                                "placeholder": "",
+                                "list": false,
+                                "show": true,
+                                "multiline": true,
+                                "value": "from langflow.base.models.model import LCModelComponent\nfrom langflow.field_typing import LanguageModel\nfrom langflow.inputs import MessageTextInput, SecretStrInput\nfrom langflow.inputs.inputs import HandleInput\nfrom langflow.io import DictInput, DropdownInput\n\n\nclass AmazonBedrockComponent(LCModelComponent):\n    display_name: str = \"Amazon Bedrock\"\n    description: str = \"Generate text using Amazon Bedrock LLMs.\"\n    icon = \"Amazon\"\n    name = \"AmazonBedrockModel\"\n\n    inputs = [\n        *LCModelComponent._base_inputs,\n        DropdownInput(\n            name=\"model_id\",\n            display_name=\"Model ID\",\n            options=[\n                \"anthropic.claude-3-haiku-20240307-v1:0\",\n                \"anthropic.claude-3-opus-20240229-v1:0\",\n                \"anthropic.claude-3-5-sonnet-20240620-v1:0\",\n                \"anthropic.claude-3-5-sonnet-20241022-v2:0\",\n                \"us.anthropic.claude-3-opus-20240229-v1:0\"\n            ],\n            value=\"anthropic.claude-3-5-sonnet-20241022-v2:0\",\n        ),\n        SecretStrInput(name=\"aws_access_key\", display_name=\"Access Key\"),\n        SecretStrInput(name=\"aws_secret_key\", display_name=\"Secret Key\"),\n        MessageTextInput(name=\"credentials_profile_name\", display_name=\"Credentials Profile Name\", advanced=True),\n        DropdownInput(\n            name=\"region_name\", \n            display_name=\"Region Name\",\n            options=[\n                \"us-west-2\",\n                \"us-east-1\"\n            ],\n            value=\"us-east-1\"),\n        DictInput(name=\"model_kwargs\", display_name=\"Model Kwargs\", advanced=True, is_list=True),\n        MessageTextInput(name=\"endpoint_url\", display_name=\"Endpoint URL\", advanced=True),\n        HandleInput(\n            name=\"output_parser\",\n            display_name=\"Output Parser\",\n            info=\"The parser to use to parse the output of the model\",\n            advanced=True,\n            input_types=[\"OutputParser\"],\n        ),\n    ]\n\n    def build_model(self) -> LanguageModel:  # type: ignore[type-var]\n        try:\n            from langchain_aws import ChatBedrock\n        except ImportError as e:\n            msg = \"langchain_aws is not installed. Please install it with `pip install langchain_aws`.\"\n            raise ImportError(msg) from e\n        if self.aws_access_key:\n            import boto3\n\n            session = boto3.Session(\n                aws_access_key_id=self.aws_access_key,\n                aws_secret_access_key=self.aws_secret_key,\n            )\n        elif self.credentials_profile_name:\n            import boto3\n\n            session = boto3.Session(profile_name=self.credentials_profile_name)\n        else:\n            import boto3\n\n            session = boto3.Session()\n\n        client_params = {}\n        if self.endpoint_url:\n            client_params[\"endpoint_url\"] = self.endpoint_url\n        if self.region_name:\n            client_params[\"region_name\"] = self.region_name\n\n        boto3_client = session.client(\"bedrock-runtime\", **client_params)\n        try:\n            output = ChatBedrock(\n                client=boto3_client,\n                provider=\"anthropic\",\n                model_id=self.model_id,\n                region_name=self.region_name,\n                model_kwargs=self.model_kwargs,\n                endpoint_url=self.endpoint_url,\n                streaming=self.stream,\n            )\n        except Exception as e:\n            msg = \"Could not connect to AmazonBedrock API.\"\n            raise ValueError(msg) from e\n        return output\n",
+                                "fileTypes": [],
+                                "file_path": "",
+                                "password": false,
+                                "name": "code",
+                                "advanced": true,
+                                "dynamic": true,
+                                "info": "",
+                                "load_from_db": false,
+                                "title_case": false
+                            },
+                            "credentials_profile_name": {
+                                "trace_as_input": true,
+                                "trace_as_metadata": true,
+                                "load_from_db": false,
+                                "list": false,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "credentials_profile_name",
+                                "value": "",
+                                "display_name": "Credentials Profile Name",
+                                "advanced": true,
+                                "input_types": [
+                                    "Message"
+                                ],
+                                "dynamic": false,
+                                "info": "",
+                                "title_case": false,
+                                "type": "str",
+                                "_input_type": "MessageTextInput"
+                            },
+                            "endpoint_url": {
+                                "trace_as_input": true,
+                                "trace_as_metadata": true,
+                                "load_from_db": false,
+                                "list": false,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "endpoint_url",
+                                "value": "",
+                                "display_name": "Endpoint URL",
+                                "advanced": true,
+                                "input_types": [
+                                    "Message"
+                                ],
+                                "dynamic": false,
+                                "info": "",
+                                "title_case": false,
+                                "type": "str",
+                                "_input_type": "MessageTextInput"
+                            },
+                            "input_value": {
+                                "trace_as_input": true,
+                                "trace_as_metadata": true,
+                                "load_from_db": false,
+                                "list": false,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "input_value",
+                                "value": "",
+                                "display_name": "Input",
+                                "advanced": false,
+                                "input_types": [
+                                    "Message"
+                                ],
+                                "dynamic": false,
+                                "info": "",
+                                "title_case": false,
+                                "type": "str",
+                                "_input_type": "MessageInput"
+                            },
+                            "model_id": {
+                                "trace_as_metadata": true,
+                                "options": [
+                                    "anthropic.claude-3-haiku-20240307-v1:0",
+                                    "anthropic.claude-3-opus-20240229-v1:0",
+                                    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+                                    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+                                    "us.anthropic.claude-3-opus-20240229-v1:0"
+                                ],
+                                "combobox": false,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "model_id",
+                                "value": "anthropic.claude-3-haiku-20240307-v1:0",
+                                "display_name": "Model ID",
+                                "advanced": false,
+                                "dynamic": false,
+                                "info": "",
+                                "title_case": false,
+                                "type": "str",
+                                "_input_type": "DropdownInput",
+                                "load_from_db": false
+                            },
+                            "model_kwargs": {
+                                "trace_as_input": true,
+                                "list": true,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "model_kwargs",
+                                "value": {},
+                                "display_name": "Model Kwargs",
+                                "advanced": true,
+                                "dynamic": false,
+                                "info": "",
+                                "title_case": false,
+                                "type": "dict",
+                                "_input_type": "DictInput"
+                            },
+                            "region_name": {
+                                "trace_as_metadata": true,
+                                "options": [
+                                    "us-west-2",
+                                    "us-east-1"
+                                ],
+                                "combobox": false,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "region_name",
+                                "value": "us-east-1",
+                                "display_name": "Region Name",
+                                "advanced": false,
+                                "dynamic": false,
+                                "info": "",
+                                "title_case": false,
+                                "type": "str",
+                                "_input_type": "DropdownInput"
+                            },
+                            "stream": {
+                                "trace_as_metadata": true,
+                                "list": false,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "stream",
+                                "value": false,
+                                "display_name": "Stream",
+                                "advanced": true,
+                                "dynamic": false,
+                                "info": "Stream the response from the model. Streaming works only in Chat.",
+                                "title_case": false,
+                                "type": "bool",
+                                "_input_type": "BoolInput"
+                            },
+                            "system_message": {
+                                "trace_as_input": true,
+                                "trace_as_metadata": true,
+                                "load_from_db": false,
+                                "list": false,
+                                "required": false,
+                                "placeholder": "",
+                                "show": true,
+                                "name": "system_message",
+                                "value": "",
+                                "display_name": "System Message",
+                                "advanced": true,
+                                "input_types": [
+                                    "Message"
+                                ],
+                                "dynamic": false,
+                                "info": "System message to pass to the model.",
+                                "title_case": false,
+                                "type": "str",
+                                "_input_type": "MessageTextInput"
+                            }
+                        },
+                        "description": "Generate text using Amazon Bedrock LLMs.",
+                        "icon": "Amazon",
+                        "base_classes": [
+                            "LanguageModel",
+                            "Message"
+                        ],
+                        "display_name": "Amazon Bedrock",
+                        "documentation": "",
+                        "custom_fields": {},
+                        "output_types": [],
+                        "pinned": false,
+                        "conditional_paths": [],
+                        "frozen": false,
+                        "outputs": [
+                            {
+                                "types": [
+                                    "Message"
+                                ],
+                                "selected": "Message",
+                                "name": "text_output",
+                                "display_name": "Text",
+                                "method": "text_response",
+                                "value": "__UNDEFINED__",
+                                "cache": true,
+                                "required_inputs": [
+                                    "input_value",
+                                    "stream",
+                                    "system_message"
+                                ]
+                            },
+                            {
+                                "types": [
+                                    "LanguageModel"
+                                ],
+                                "selected": "LanguageModel",
+                                "name": "model_output",
+                                "display_name": "Language Model",
+                                "method": "build_model",
+                                "value": "__UNDEFINED__",
+                                "cache": true,
+                                "required_inputs": [
+                                    "aws_access_key",
+                                    "aws_secret_key",
+                                    "credentials_profile_name",
+                                    "endpoint_url",
+                                    "model_id",
+                                    "model_kwargs",
+                                    "region_name",
+                                    "stream"
+                                ]
+                            }
+                        ],
+                        "field_order": [
+                            "input_value",
+                            "system_message",
+                            "stream",
+                            "model_id",
+                            "aws_access_key",
+                            "aws_secret_key",
+                            "credentials_profile_name",
+                            "region_name",
+                            "model_kwargs",
+                            "endpoint_url",
+                            "output_parser"
+                        ],
+                        "beta": false,
+                        "edited": true,
+                        "metadata": {},
+                        "official": false
+                    },
+                    "id": "AmazonBedrockModel-i7jFa"
+                },
+                "id": "AmazonBedrockModel-i7jFa",
+                "position": {
+                    "x": 0,
+                    "y": 0
+                },
+                "type": "genericNode"
+            }
+        ],
+        "viewport": {
+            "x": 1,
+            "y": 1,
+            "zoom": 1
+        }
+    },
+    "description": "Generate text using Amazon Bedrock LLMs.",
+    "name": "Amazon Bedrock",
+    "id": "AmazonBedrockModel-i7jFa",
+    "is_component": true,
+    "last_tested_version": "1.0.19.post2"
+}
