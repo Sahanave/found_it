@@ -1,7 +1,7 @@
 name: "building-genai-apps"
 services:
   langflow:
-    image: langflowai/langflow:1.0.19
+    image: langflowai/langflow:v1.0.19.post2
     container_name: app_langflow
     hostname: langflow
     ports:
@@ -12,13 +12,13 @@ services:
     volumes:
       - langflow-data:/app/langflow
       - langflow-config:/app/config
+      - ./langflow_custom_components/:/app/components/
     networks:
       - node-network
 
   postgres:
     image: postgres:16
     container_name: app_postgres
-    hostname: postgres
     env_file: ".env"
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -43,7 +43,6 @@ volumes:
   postgres-data:
   langflow-data:
   langflow-config:
-
 
 networks:
   node-network:
