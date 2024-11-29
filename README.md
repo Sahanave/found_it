@@ -64,3 +64,48 @@ Run then the below command
 ```bash
 docker compose up -d
 ```
+
+## Langflow
+
+### Installing packages
+Connect to the langflow container
+```
+docker exec -it app_langflow /bin/bash
+```
+Now run
+```
+which python
+which pip3
+```
+If your answer is like below, we need to reinstall pip
+```
+/app/.venv/bin/python
+/usr/local/bin/pip3
+```
+You need to make sure there is a right pip
+```
+source activate /app/.venv/bin/activate
+python -m ensurepip --upgrade
+which pip3
+```
+Now we should get 
+```
+/app/.venv/bin/pip3
+```
+Now you can install packages, for example to run tavily search
+```
+pip3 install tavily-python
+```
+
+## Ollama
+
+We need to mamually pull models we would like to use on ollama, so once the container is up we can run
+```
+docker exec -it app_ollama /bin/bash
+```
+and now we can pull the models
+```
+ollama pull gemma2:2b
+ollama pull nomic-embed-text
+```
+More about ollama models is on [their website](https://ollama.com/library/)
