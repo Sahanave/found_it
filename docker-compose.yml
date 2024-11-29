@@ -3,18 +3,20 @@ services:
   langflow:
     image: langflowai/langflow:v1.0.19.post2
     container_name: app_langflow
-    hostname: langflow
     ports:
       - "7860:7860"
     depends_on:
       - postgres
+      - qdrant
     env_file: ".env"
     volumes:
       - langflow-data:/app/langflow
       - langflow-config:/app/config
       - ./langflow_custom_components/:/app/components/
     networks:
-      - node-network
+      node-network:
+        aliases:
+          - langflow
 
   postgres:
     image: postgres:16
@@ -23,7 +25,33 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - node-network
+      node-network:
+        aliases:
+          - postgres
+
+  qdrant:
+    container_name: app_qdrant
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      node-network:
+        aliases:
+          - qdrant
+
+  ollama:
+    container_name: app_ollama
+    image: ollama/ollama:latest
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      node-network:
+        aliases:
+          - ollama
 
   streamlit:
     image: streamlit-app
@@ -35,7 +63,6 @@ services:
       - "8501:8501"
     depends_on:
       - langflow
-      - postgres
     networks:
       - node-network
 
@@ -43,6 +70,8 @@ volumes:
   postgres-data:
   langflow-data:
   langflow-config:
+  qdrant-data:
+  ollama:
 
 networks:
   node-network:
